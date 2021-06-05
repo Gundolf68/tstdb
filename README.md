@@ -43,6 +43,8 @@ end
 To query all users, we use the search method, which takes a text pattern with one or more wildcards and a callback function as parameters:
 ```Lua
 db.search("/user/*/", function(key) print(key) end)
+-- shorter:
+db.search("/user/*/", print)
 ```
 Outputs all matching entries in alphabetical order:  
 ```
