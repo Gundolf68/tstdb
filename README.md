@@ -58,6 +58,14 @@ print(db.node_count())
 ```
 The put method returns a boolean value indicating whether the key was added (true) or already present (false). The same is true for the remove method.
 
+### Persistence
+To make the tree persistent, a file name can be passed to the constructor:
+```Lua
+local db = tstdb("fruits.db")
+```
+If the file exists, the content is loaded, otherwise it is created. 
+The database file is absolutely fail-safe: it recovers automatically after a crash (e.g. power failure or program crash). 
+
 ### Optimization
 Ternary Search Trees are sensitive to the order of the inserted words: if you insert the keys in sorted order you end up with a long skinny tree. You can check the state of the tree with the state method:
 ```Lua
