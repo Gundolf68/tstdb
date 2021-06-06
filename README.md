@@ -6,23 +6,21 @@ Ternary search trees are a somewhat underrated data structure. This is due, amon
 typedef struct sNode Node;
 struct sNode { char splitchar; char flag; Node *high; Node *low; Node *equal; };
 ```
-On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient.
-
-The solution to both problems is to use an array-based tree with this structure:
+On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient. The solution to both problems is to use an array-based tree with this structure:
 ```C
 typedef struct { char splitchar; char flag; uint32_t high; uint32_t low; uint32_t equal; } Node;
 ```
-Now we have a node size of 16 bytes and can allocate memory for the nodes in advance. With an uint32_t array index we can create a TST with max. 2^32 nodes = 64GB (which is a lot of memory). 
+Now we have a node size of 16 bytes and can allocate memory for the array of nodes in advance. With an uint32_t array index we can create a TST with max. 2^32 nodes = 64GB (which is a lot of memory - at least in 2021). 
 
-Ternary Search Trees are very space efficient. A German dictionary with 356008 words needs 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung" 😀).
+Ternary Search Trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, the plural "Telekommunikationsüberwachungsverordnung**en**" needs only 2 more nodes).
 
 ### Basic usage
 ```Lua
 -- import 
-local tstdb = require("tstdb")
+local TSTDB = require("tstdb")
 
 -- create an instance  
-local db = tstdb()
+local db = TSTDB()
 
 -- insert some keys
 db.put("bananas")
@@ -59,9 +57,14 @@ print(db.node_count())
 The put method returns a boolean value indicating whether the key was added (true) or already present (false). The same is true for the remove method.
 
 ### Persistence
-To make the tree persistent, a file name can be passed to the constructor:
+To make the tree persistent, a filename can be passed to the constructor:
 ```Lua
-local db = tstdb("fruits.db")
+local db, err = TSTDB("fruits.db")
+if not db then
+    -- your errorhandling here
+    print(err)
+    return
+end
 ```
 If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately.
 The database file is absolutely fail-safe: it recovers automatically after a crash (e.g. power failure or program crash).  
@@ -87,7 +90,7 @@ db.optimize()
 It is also useful to call this method when you have removed many keys. Note that the number of nodes always remains the same, no matter in which order the keys are inserted.
 The tree can be displayed using the dump method:
 ```Lua
-local db = tstdb()
+local db = TSTDB()
 db.put("banana")
 db.put("apples")
 db.put("bananas")
@@ -113,9 +116,9 @@ node	char	low	equal	high	flag
 ### Use as database
 They are also underestimated because they are usually only used as a data set from which the keys are retrieved in sorted order. Yet they can be used very efficiently as a database. Let's make a little example (we wan't to store users and groups):
 ```Lua
-local tstdb = require("tstdb")
+local TSTDB = require("tstdb")
 
-local db = tstdb()
+local db = TSTDB()
 -- insert the first user
 db.put("/user/walter/")
 db.put("/user/walter/password/secret123")
