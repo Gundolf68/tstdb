@@ -73,7 +73,7 @@ TSTDB
 8       cherries
 -6      apples
 ```
-A database file starts with a header "TSTDB" followed by a newline (ASCII 10). Each entry start with the length (in bytes) of the key, followed by a tab (ASCII 9) and the key. If the length is negative, the following key is removed.
+A database file starts with the header "TSTDB" in the first line. Each entry starts with the length (in bytes) of the key, followed by a tab (ASCII 9) and the key. If the length is negative, the following key is removed.
 
 ### Optimization
 Ternary Search Trees are sensitive to the order of the inserted words: if you insert the keys in sorted order you end up with a long skinny tree. You can check the state of the tree with the state method:
