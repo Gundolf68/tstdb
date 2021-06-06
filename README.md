@@ -6,7 +6,7 @@ Ternary search trees are a somewhat underrated data structure. This is due, amon
 typedef struct sNode Node;
 struct sNode { char splitchar; char flag; Node *high; Node *low; Node *equal; };
 ```
-On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient. The solution to both problems is to use an array-based tree with this structure:
+On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient. The solution to both problems is to use an array-based tree where the low/equal/high members represent array indices:
 ```C
 typedef struct { char splitchar; char flag; uint32_t high; uint32_t low; uint32_t equal; } Node;
 ```
