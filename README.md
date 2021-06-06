@@ -80,7 +80,11 @@ Ternary Search Trees are sensitive to the order of the inserted words: if you in
 ```Lua
 print(db.state())
 ```
-This method returns a number between 0 (completely unbalanced) and 1 (completely balanced).  
+This method returns a number between 0 (completely unbalanced) and 1 (completely balanced). The optimize method rebuilds the tree by reinserting all keys in random order:
+```Lua
+db.optimize()
+```
+It is also useful to call this method when you have removed many keys. Note that the number of nodes always remains the same, no matter in which order the keys are inserted.
 The tree can be displayed using the dump method:
 ```Lua
 local db = tstdb()
@@ -106,12 +110,6 @@ node	char	low	equal	high	flag
 12	's'	0	0	0	1
 13	's'	0	0	0	1
 ```
-The optimize method rebuilds the tree by reinserting all keys in random order:
-```Lua
-db.optimize()
-```
-It is also useful to call this method when you have removed many keys. Note that the number of nodes always remains the same, no matter in which order the keys are inserted.
-
 ### Use as database
 They are also underestimated because they are usually only used as a data set from which the keys are retrieved in sorted order. Yet they can be used very efficiently as a database. Let's make a little example (we wan't to store users and groups):
 ```Lua
@@ -146,4 +144,10 @@ Outputs all matching entries in alphabetical order:
 ```
 /user/jesse/  
 /user/walter/
+```
+Count all users in the "admin" group:
+```Lua
+local count = 0
+db.search("/user/*/group/admin", function(key) count = count + 1 end)
+print(count)
 ```
