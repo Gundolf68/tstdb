@@ -63,15 +63,24 @@ To make the tree persistent, a file name can be passed to the constructor:
 ```Lua
 local db = tstdb("fruits.db")
 ```
-If the file exists, the content is loaded, otherwise it is created. 
-The database file is absolutely fail-safe: it recovers automatically after a crash (e.g. power failure or program crash). 
+If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately.
+The database file is absolutely fail-safe: it recovers automatically after a crash (e.g. power failure or program crash).  
+The format is human readable so that it can be edited with an text editor:
+```
+TSTDB
+7       bananas
+6       apples
+8       cherries
+-6      apples
+```
+A database file starts with a header "TSTDB" followed by a newline (ASCII 10). Each entry start with the length (in bytes) of the key, followed by a tab (ASCII 9) and the key. If the length is negative, the following key is removed.
 
 ### Optimization
 Ternary Search Trees are sensitive to the order of the inserted words: if you insert the keys in sorted order you end up with a long skinny tree. You can check the state of the tree with the state method:
 ```Lua
 print(db.state())
 ```
-This method returns a number between 0 (completely unbalanced) and 1 (completely balanced). 
+This method returns a number between 0 (completely unbalanced) and 1 (completely balanced).  
 The tree can be displayed using the dump method:
 ```Lua
 local db = tstdb()
