@@ -4,7 +4,7 @@ local TST_START_CAPACITY = 256
 local TST_GROW_FACTOR = 2
 local TST_MAX_KEY_LEN = 512
 local TST_DUMP_SIZE = 40
-local TST_FILE_HEADER = "TSTDB\n"
+local TST_FILE_HEADER = "TSTDB"
 
 ffi.cdef[[
 	typedef struct { uint8_t splitchar; uint8_t flag; uint32_t high; uint32_t low; uint32_t equal; } TSTNode;
@@ -48,7 +48,7 @@ local function TSTDB(filename)
 			file:flush()	
 		else 
 			-- file exist: check header
-			if file:read(#TST_FILE_HEADER) ~= TST_FILE_HEADER then 	 
+			if file:read() ~= TST_FILE_HEADER then 	 
 				file:close()
 				return nil, "file '" .. filename .. "' is not a database file: header expected"
 			end
