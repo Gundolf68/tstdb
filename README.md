@@ -66,9 +66,7 @@ if not db then
     return
 end
 ```
-If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately.
-The database file is absolutely fail-safe: it recovers automatically after a crash (e.g. power failure or program crash).  
-The format is human readable so that it can be edited with an text editor:
+When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is absolutely fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
 ```
 TSTDB
 7       bananas
@@ -114,7 +112,7 @@ node	char	low	equal	high	flag
 13	's'	0	0	0	1
 ```
 ### Use as database
-They are also underestimated because they are usually only used as a data set from which the keys are retrieved in sorted order. Yet they can be used very efficiently as a database. Let's make a little example (we wan't to store users and groups):
+Ternary Search Trees are underestimated mainly because they are usually only used as a sorted set. However, they can be used very efficiently as a (simple) database. Let's make a little example (we wan't to store users and groups):
 ```Lua
 local TSTDB = require("tstdb")
 
@@ -143,7 +141,7 @@ db.search("/user/*/", function(key) print(key) end)
 -- shorter:
 db.search("/user/*/", print)
 ```
-Outputs all matching entries in alphabetical order:  
+Which gives us all the results in alphabetical order:  
 ```
 /user/jesse/  
 /user/walter/
@@ -151,6 +149,6 @@ Outputs all matching entries in alphabetical order:
 Count all users in the "admin" group:
 ```Lua
 local count = 0
-db.search("/user/*/group/admin", function(key) count = count + 1 end)
+db.search("/user/*/group/admin", function() count = count + 1 end)
 print(count)
 ```
