@@ -12,7 +12,7 @@ typedef struct { char splitchar; char flag; uint32_t high; uint32_t low; uint32_
 ```
 Now we have a node size of 16 bytes and can allocate memory for the array of nodes in advance. With an uint32_t array index we can create a TST with max. 2^32 nodes = 64GB (which is a lot of memory - at least in 2021). 
 
-Ternary Search Trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, the plural "Telekommunikationsüberwachungsverordnung**en**" needs only 2 more nodes).
+Ternary Search Trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, if you add the plural "Telekommunikationsüberwachungsverordnung**en**" the words consumes only 2 new nodes).
 
 ### Basic usage
 ```Lua
