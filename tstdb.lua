@@ -33,6 +33,24 @@ local function TSTDB(filename)
 		end
 		return line_no
 	end
+
+
+	local function get_segment(buf_len, callback, segment)	
+		local count, start = 1, 1
+		for i = 1, buf_len do
+			if buffer[i] == 47 then --> '/'
+				if count == segment then 
+					callback(ffi.string(buffer + start, i - start)) 
+					return
+				end
+				count = count + 1
+				start = i + 1
+			end
+		end
+		if count == segment then
+			callback(ffi.string(buffer + start, buf_len + 1 - start))
+		end
+	end
 	
 		
 	local function load_db(filename, tst)
@@ -73,12 +91,11 @@ local function TSTDB(filename)
 			if key_len or cur_pos ~= end_pos then 
 				-- file is corrupt
 				if cur_pos == end_pos and end_pos - pos < TST_MAX_KEY_LEN then
-					-- only the last entry ist damaged: clear and rewind to the last correct position
+					-- only the last entry is damaged: clear and rewind to the last correct position
 					file:seek("set", pos)
 					file:write("\n", string.rep(" ", end_pos - pos - 2), "\n")
 					file:flush()
 					file:seek("set", pos + 1)
-					print("rewind")
 				else
 					-- abort with a useful error message
 					local line_no = get_line_no(file, cur_pos)
@@ -139,28 +156,32 @@ local function TSTDB(filename)
 	end
 
 
-	local function traverse_wc(node, key, key_index, buf_index, callback)
+	local function traverse_wc(node, key, key_index, buf_index, callback, segment)
 		if node == nodes[0] then return end
 		local key_char = byte(key, key_index)
 		local diff = key_char - node.splitchar
 		local wildcard = key_char == wildcard_byte
 		
 		if diff < 0 or wildcard then
-			traverse_wc(nodes[node.low], key, key_index, buf_index, callback)
+			traverse_wc(nodes[node.low], key, key_index, buf_index, callback, segment)
 		end
 		if diff == 0 or wildcard then	
 			buffer[buf_index] = node.splitchar		
 			if key_index < #key then
-				traverse_wc(nodes[node.equal], key, key_index + 1, buf_index + 1, callback)
+				traverse_wc(nodes[node.equal], key, key_index + 1, buf_index + 1, callback, segment)
 			elseif node.flag == 1 then
-				callback(ffi.string(buffer, buf_index + 1))
+				if segment then
+					get_segment(buf_index, callback, segment)
+				else
+					callback(ffi.string(buffer, buf_index + 1))
+				end
 			end
 			if wildcard then
-				traverse_wc(nodes[node.equal], key, key_index, buf_index + 1, callback)
+				traverse_wc(nodes[node.equal], key, key_index, buf_index + 1, callback, segment)
 			end
 		end
 		if diff > 0 or wildcard then
-			traverse_wc(nodes[node.high], key, key_index, buf_index, callback)
+			traverse_wc(nodes[node.high], key, key_index, buf_index, callback, segment)
 		end		
 	end
 					
@@ -269,9 +290,9 @@ local function TSTDB(filename)
 	end
 	
 	
-	function self.search(key, callback)
+	function self.search(key, callback, segment)
 		if #key > 0 then
-			traverse_wc(nodes[1], key, 1, 0, callback)
+			traverse_wc(nodes[1], key, 1, 0, callback, segment)
 		end
 	end
 
