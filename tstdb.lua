@@ -1,5 +1,6 @@
 local ffi = require("ffi")
 local TST_WILDCARD = "*"
+local TST_SEPARATOR = "/"
 local TST_START_CAPACITY = 256
 local TST_GROW_FACTOR = 2
 local TST_MAX_KEY_LEN = 512
@@ -18,7 +19,7 @@ local function TSTDB(filename)
 	
 	local file, err, byte, key_count
 	local node_count, size_of_node, wildcard_byte
-	local buffer, node_capacity, nodes
+	local buffer, node_capacity, nodes, separator_byte
 
 	-- private methods
 	
@@ -38,7 +39,7 @@ local function TSTDB(filename)
 	local function get_segment(buf_len, callback, segment)	
 		local count, start = 1, 1
 		for i = 1, buf_len do
-			if buffer[i] == 47 then --> '/'
+			if buffer[i] == separator_byte then
 				if count == segment then 
 					callback(ffi.string(buffer + start, i - start)) 
 					return
@@ -123,6 +124,7 @@ local function TSTDB(filename)
 	local function init()
 		byte = string.byte
 		wildcard_byte = byte(TST_WILDCARD)
+		separator_byte = byte(TST_SEPARATOR)
 		node_count, key_count = 1, 0
 		buffer = ffi.new("uint8_t[?]", TST_MAX_KEY_LEN)
 		node_capacity = TST_START_CAPACITY
@@ -407,6 +409,15 @@ local function TSTDB(filename)
 		return (balance + balance_offset) / 2
 	end
 	
+	
+	function self.separator(new_separator)
+		if new_separator then 
+			separator_byte = byte(new_separator)
+		end
+		return string.char(separator_byte)
+	end
+		
+		
 	return init()
 	
 end
