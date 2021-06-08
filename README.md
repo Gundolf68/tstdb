@@ -1,18 +1,16 @@
 # tstdb
-An efficient Ternary Search Tree and persistent micro-database for LuaJIT
+An efficient Ternary Search Tree and persistent database for LuaJIT
 
 Ternary search trees are a somewhat underrated data structure. This is due, among other things, to the often naïve implementation. Thus, in many cases the following structure is chosen for the nodes (in C): 
 ```C
 typedef struct sNode Node;
 struct sNode { char splitchar; char flag; Node *high; Node *low; Node *equal; };
 ```
-On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient. The solution to both problems is to use an array-based tree where the low/equal/high members represent array indices:
+On a 64-bit system, each node has a size of 32 bytes. As we will see, this size can be easily halved. Also, in many cases, memory is allocated individually for each node during insertion, which is very inefficient. The solution to both problems is to use an array-based tree where the low/equal/high structure members represent array indices:
 ```C
 typedef struct { char splitchar; char flag; uint32_t high; uint32_t low; uint32_t equal; } Node;
 ```
-Now we have a node size of 16 bytes and can allocate memory for the array of nodes in advance. With an uint32_t array index we can create a TST with max. 2^32 nodes = 64GB (which is a lot of memory - at least in 2021). 
-
-Ternary Search Trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, if you add the plural "Telekommunikationsüberwachungsverordnung**en**" the words consumes only 2 new nodes).
+This reduces the node size to 16 bytes and we can allocate memory for the array of nodes in advance. With a uint32_t as index, 2^32 nodes can be addressed, which is a lot of memory (64GB), since search trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780954 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, if you add the plural "Telekommunikationsüberwachungsverordnung**en**" the word consumes only 2 new nodes).
 
 ### Basic usage
 ```Lua
@@ -66,7 +64,7 @@ if not db then
     return
 end
 ```
-When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is absolutely fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
+When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
 ```
 TSTDB
 7       bananas
@@ -126,7 +124,7 @@ db.put("/user/jesse/")
 db.put("/user/jesse/password/verysecret")
 db.put("/user/jesse/group/standard")
 ```
-The char '/' as path separator has no special meaning for the TST - you can use any char.
+The character '/' as path separator has (for now) no special meaning for the TST - you can use any char.
 Now some queries. Suppose a user wants to log in:
 ```Lua
 if db.get("/user/" .. name .. "/password/" .. password) then
@@ -146,7 +144,23 @@ Which gives us all the results in alphabetical order:
 /user/jesse/  
 /user/walter/
 ```
-Count all users in the "admin" group:
+If only the username and not the whole key is needed, then the search method can be called with a third parameter that selects the segment. The default separator is '/' (so the slash has a special meaning after all - at least for the search method) but you can set the separator to any other char:
+```Lua
+db.search("/user/*/", print, 2)
+-- print the current separator
+print(db.separator())
+-- set a dot as new separator
+db.separator(".")
+print(db.separator())
+```
+Output:
+```
+jesse  
+walter
+/
+.
+```
+Next query: Count all users in the "admin" group:
 ```Lua
 local count = 0
 db.search("/user/*/group/admin", function() count = count + 1 end)
