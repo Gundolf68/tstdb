@@ -121,6 +121,7 @@ db.put("/user/walter/password/secret123")
 db.put("/user/walter/group/admin")
 db.put("/user/walter/hobbies/cooking")
 db.put("/user/walter/hobbies/counting money")
+db.put("/user/walter/friends/jesse")
 -- insert a second user
 db.put("/user/jesse/")
 db.put("/user/jesse/password/verysecret")
@@ -172,5 +173,5 @@ print(count)
 ```
 Search all users who like to cook and are in the admin group:
 ```Lua
-db.search("/user/*/hobbies/cooking", function(key) if db.get("/user/" .. key .. "/group/admin") then print(key) end end, 2)
+db.search("/user/*/hobbies/cooking", function(name) if db.get("/user/" .. name .. "/group/admin") then print(name) end end, 2)
 ```
