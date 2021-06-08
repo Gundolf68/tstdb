@@ -1,5 +1,5 @@
 # tstdb
-An efficient Ternary Search Tree and persistent micro-database for LuaJIT
+An efficient Ternary Search Tree and persistent database for LuaJIT
 
 Ternary search trees are a somewhat underrated data structure. This is due, among other things, to the often naïve implementation. Thus, in many cases the following structure is chosen for the nodes (in C): 
 ```C
