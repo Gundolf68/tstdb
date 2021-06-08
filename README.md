@@ -119,10 +119,14 @@ local db = TSTDB()
 db.put("/user/walter/")
 db.put("/user/walter/password/secret123")
 db.put("/user/walter/group/admin")
+db.put("/user/walter/hobbies/cooking")
+db.put("/user/walter/hobbies/counting money")
 -- insert a second user
 db.put("/user/jesse/")
 db.put("/user/jesse/password/verysecret")
 db.put("/user/jesse/group/standard")
+db.put("/user/jesse/hobbies/sleeping")
+db.put("/user/jesse/hobbies/party")
 ```
 The character '/' as path separator has (for now) no special meaning for the TST - you can use any char.
 Now some queries. Suppose a user wants to log in:
@@ -165,4 +169,8 @@ Next query: Count all users in the "admin" group:
 local count = 0
 db.search("/user/*/group/admin", function() count = count + 1 end)
 print(count)
+```
+Search all users who like to cook and are in the admin group:
+```Lua
+db.search("/user/*/hobbies/cooking", function(key) if db.get("/user/" .. key .. "/group/admin") then print(key) end end, 2)
 ```
