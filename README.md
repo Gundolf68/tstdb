@@ -64,7 +64,7 @@ if not db then
     return
 end
 ```
-When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is absolutely fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
+When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
 ```
 TSTDB
 7       bananas
@@ -144,18 +144,23 @@ Which gives us all the results in alphabetical order:
 /user/jesse/  
 /user/walter/
 ```
-If not the whole key but only the username is to be queried, the search method can be called with a third parameter that selects the segment of the key:
+If only the username and not the whole key is needed, then the search method can be called with a third parameter that selects the segment. The default separator is '/' (so the slash has a special meaning after all - at least for the search method) but you can set the separator to any other char:
 ```Lua
 db.search("/user/*/", print, 2)
+-- print the current separator
+print(db.separator())
+-- set a dot as new separator
+db.separator(".")
+print(db.separator())
 ```
 Output:
 ```
 jesse  
 walter
+/
+.
 ```
-This only works if you use the character '/' as separator (so the slash has a special meaning after all - at least for the search method).
-
-Another query: Count all users in the "admin" group:
+Next query: Count all users in the "admin" group:
 ```Lua
 local count = 0
 db.search("/user/*/group/admin", function() count = count + 1 end)
