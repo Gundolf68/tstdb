@@ -174,4 +174,6 @@ print(count)
 Search all users who like to cook and are in the admin group:
 ```Lua
 db.search("/user/*/hobbies/cooking", function(name) if db.get("/user/" .. name .. "/group/admin") then print(name) end end, 2)
+-- if the number of users that like to cook is much bigger then the number of admins, then this is faster:
+db.search("/user/*/group/admin", function(name) if db.get("/user/" .. name .. "/hobbies/cooking") then print(name) end end, 2)
 ```
