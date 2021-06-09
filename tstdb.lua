@@ -19,7 +19,7 @@ local function TSTDB(filename)
 	
 	local file, err, byte, key_count
 	local node_count, size_of_node, wildcard_byte
-	local buffer, node_capacity, nodes, separator_byte
+	local buffer_pool, node_capacity, nodes, separator_byte
 
 	-- private methods
 	
@@ -36,7 +36,7 @@ local function TSTDB(filename)
 	end
 
 
-	local function get_segment(buf_len, callback, segment)	
+	local function get_segment(buffer, buf_len, callback, segment)	
 		local count, start = 1, 1
 		for i = 1, buf_len do
 			if buffer[i] == separator_byte then
@@ -51,6 +51,21 @@ local function TSTDB(filename)
 		if count == segment then
 			callback(ffi.string(buffer + start, buf_len + 1 - start))
 		end
+	end
+	
+	
+	local function fetch_buffer()
+		local buffer = buffer_pool[#buffer_pool]
+		if not buffer then 
+			return ffi.new("uint8_t[?]", TST_MAX_KEY_LEN) 
+		end
+		buffer_pool[#buffer_pool] = nil
+		return buffer
+	end
+	
+	
+	local function release_buffer(buffer)
+		buffer_pool[#buffer_pool + 1] = buffer
 	end
 	
 		
@@ -125,8 +140,8 @@ local function TSTDB(filename)
 		byte = string.byte
 		wildcard_byte = byte(TST_WILDCARD)
 		separator_byte = byte(TST_SEPARATOR)
+		buffer_pool = {}
 		node_count, key_count = 1, 0
-		buffer = ffi.new("uint8_t[?]", TST_MAX_KEY_LEN)
 		node_capacity = TST_START_CAPACITY
 		nodes = ffi.new("TSTNode[?]", node_capacity)
 		size_of_node = ffi.sizeof("TSTNode")
@@ -146,44 +161,44 @@ local function TSTDB(filename)
 	end
 	
 	
-	local function traverse_desc(node, buf_index, callback)
+	local function traverse_desc(node, buffer, buf_index, callback)
 		if node == nodes[0] then return end
-		traverse_desc(nodes[node.high], buf_index, callback)
+		traverse_desc(nodes[node.high], buffer, buf_index, callback)
 		buffer[buf_index] = node.splitchar
-		traverse_desc(nodes[node.equal], buf_index + 1, callback)
+		traverse_desc(nodes[node.equal], buffer, buf_index + 1, callback)
 		if node.flag == 1 then 
 			callback(ffi.string(buffer, buf_index + 1)) 
 		end
-		traverse_desc(nodes[node.low], buf_index, callback)
+		traverse_desc(nodes[node.low], buffer, buf_index, callback)
 	end
 
 
-	local function traverse_wc(node, key, key_index, buf_index, callback, segment)
+	local function traverse_wc(node, key, key_index, buffer, buf_index, callback, segment)
 		if node == nodes[0] then return end
 		local key_char = byte(key, key_index)
 		local diff = key_char - node.splitchar
 		local wildcard = key_char == wildcard_byte
 		
 		if diff < 0 or wildcard then
-			traverse_wc(nodes[node.low], key, key_index, buf_index, callback, segment)
+			traverse_wc(nodes[node.low], key, key_index, buffer, buf_index, callback, segment)
 		end
 		if diff == 0 or wildcard then	
 			buffer[buf_index] = node.splitchar		
 			if key_index < #key then
-				traverse_wc(nodes[node.equal], key, key_index + 1, buf_index + 1, callback, segment)
+				traverse_wc(nodes[node.equal], key, key_index + 1, buffer, buf_index + 1, callback, segment)
 			elseif node.flag == 1 then
 				if segment then
-					get_segment(buf_index, callback, segment)
+					get_segment(buffer, buf_index, callback, segment)
 				else
 					callback(ffi.string(buffer, buf_index + 1))
 				end
 			end
 			if wildcard then
-				traverse_wc(nodes[node.equal], key, key_index, buf_index + 1, callback, segment)
+				traverse_wc(nodes[node.equal], key, key_index, buffer, buf_index + 1, callback, segment)
 			end
 		end
 		if diff > 0 or wildcard then
-			traverse_wc(nodes[node.high], key, key_index, buf_index, callback, segment)
+			traverse_wc(nodes[node.high], key, key_index, buffer, buf_index, callback, segment)
 		end		
 	end
 					
@@ -294,17 +309,21 @@ local function TSTDB(filename)
 	
 	function self.search(key, callback, segment)
 		if #key > 0 then
-			traverse_wc(nodes[1], key, 1, 0, callback, segment)
+			local buffer = fetch_buffer()
+			traverse_wc(nodes[1], key, 1, buffer, 0, callback, segment)
+			release_buffer(buffer)
 		end
 	end
 
 
-	function self.keys(callback, desc)
+	function self.keys(callback, desc)	
 		if desc then
-			traverse_desc(nodes[1], 0, callback)	
+			local buffer = fetch_buffer()
+			traverse_desc(nodes[1], buffer, 0, callback)	
+			release_buffer(buffer)
 		else
 			self.search(TST_WILDCARD, callback)
-		end
+		end	
 	end
 	
 	
