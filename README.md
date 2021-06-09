@@ -212,4 +212,4 @@ bananas
 ```
 This is not an error, since every possible combination is traversed by the tree: b**an**ana**s** and ban**an**a**s**.
 #### Updating database entries
-Suppose we want to change jesse's group from "standard" to "admin" in the user database above, then the old key "/users/jesse/group/standard" must be removed, otherwise he will be a member of both the "standard" and "admin" groups at the same time (unless this is intentional). 
+Suppose we want to change jesse's group from "standard" to "admin" in the user database above, then the old key "/users/jesse/group/standard" must be removed, otherwise he will be a member of both the "standard" and "admin" groups at the same time (of course, this can also be intentional). 
