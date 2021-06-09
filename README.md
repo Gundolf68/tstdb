@@ -46,6 +46,9 @@ db.search("*rr*s", print)
 -- remove a key
 db.remove("apples")
 
+-- remove keys with a pattern
+db.search("ba*", db.remove)
+
 -- print the number of keys
 print(db.key_count())
 
