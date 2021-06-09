@@ -131,7 +131,7 @@ db.put("/user/jesse/hobbies/party")
 ```
 The character '/' as path separator has (for now) no special meaning for the TST - you can use any char.
 
-Let's make some queries. Suppose a user wants to log in:
+Now some queries. Suppose a user wants to log in:
 ```Lua
 if db.get("/user/" .. name .. "/password/" .. password) then
     print("login ok")
