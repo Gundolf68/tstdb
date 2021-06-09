@@ -36,9 +36,9 @@ local function TSTDB(filename)
 	end
 
 
-	local function get_segment(buffer, buf_len, callback, segment)	
+	local function get_segment(buffer, buf_len, callback, segment)
 		local count, start = 1, 1
-		for i = 1, buf_len do
+		for i = 1, buf_len - 1 do
 			if buffer[i] == separator_byte then
 				if count == segment then 
 					callback(ffi.string(buffer + start, i - start)) 
@@ -49,7 +49,7 @@ local function TSTDB(filename)
 			end
 		end
 		if count == segment then
-			callback(ffi.string(buffer + start, buf_len + 1 - start))
+			callback(ffi.string(buffer + start, buf_len - start))
 		end
 	end
 	
@@ -78,7 +78,7 @@ local function TSTDB(filename)
 				return nil, err
 			end
 			-- write header
-			file:write(TST_FILE_HEADER)
+			file:write(TST_FILE_HEADER, "\n")
 			file:flush()	
 		else 
 			-- file exist: check header
@@ -187,9 +187,11 @@ local function TSTDB(filename)
 			if key_index < #key then
 				traverse_wc(nodes[node.equal], key, key_index + 1, buffer, buf_index + 1, callback, segment)
 			elseif node.flag == 1 then
-				if segment then
-					get_segment(buffer, buf_index, callback, segment)
-				else
+				if callback == self.remove then
+					node.flag = 0				
+				elseif segment then
+					get_segment(buffer, buf_index + 1, callback, segment)
+				else	
 					callback(ffi.string(buffer, buf_index + 1))
 				end
 			end
@@ -345,7 +347,7 @@ local function TSTDB(filename)
 
 
 	function self.node_count()
-		return node_count
+		return node_count - 1
 	end	
 
 
@@ -390,7 +392,7 @@ local function TSTDB(filename)
 		local count, splitchar = 0
 		write("node\tchar\tlow\tequal\thigh\tflag\n")
 		
-		for i = 0, node_count - 1 do
+		for i = 1, node_count - 1 do
 			local node = nodes[i]
 			splitchar = node.splitchar
 			if splitchar > 31 and splitchar < 127 then 
@@ -412,7 +414,7 @@ local function TSTDB(filename)
 		if node_count == 0 then return 1 end
 		local low, low_offset = 0, 0
 		local high, high_offset = 0, 0
-		for i = 0, node_count - 1 do
+		for i = 1, node_count - 1 do
 			local node = nodes[i]
 			if node.low ~= 0 then 
 				low = low + 1 
