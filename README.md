@@ -51,6 +51,9 @@ print(db.key_count())
 
 -- print the number of nodes
 print(db.node_count())
+
+-- reset the tree
+db.clear()
 ```
 The put method returns a boolean value indicating whether the key was added (true) or already present (false). The same is true for the remove method.
 
@@ -110,24 +113,30 @@ node	char	low	equal	high	flag
 13	's'	0	0	0	1
 ```
 ### Use as database
-Ternary Search Trees are underestimated mainly because they are usually only used as a sorted set. However, they can be used very efficiently as a (simple) database. Let's make a little example (we wan't to store users and groups):
+Ternary Search Trees are underestimated mainly because they are usually only used as a sorted set. However, they can be used very efficiently as a (simple) database. Let's make a little example:
 ```Lua
 local TSTDB = require("tstdb")
 
 local db = TSTDB()
 -- insert the first user
-db.put("/user/walter/")
-db.put("/user/walter/password/secret123")
-db.put("/user/walter/group/admin")
+db.put("/users/walter/")
+db.put("/users/walter/password/secret123")
+db.put("/users/walter/group/admin")
+db.put("/users/walter/hobbies/cooking")
+db.put("/users/walter/hobbies/counting money")
+db.put("/users/walter/friends/jesse")
 -- insert a second user
-db.put("/user/jesse/")
-db.put("/user/jesse/password/verysecret")
-db.put("/user/jesse/group/standard")
+db.put("/users/jesse/")
+db.put("/users/jesse/password/verysecret")
+db.put("/users/jesse/group/standard")
+db.put("/users/jesse/hobbies/sleeping")
+db.put("/users/jesse/hobbies/party")
 ```
 The character '/' as path separator has (for now) no special meaning for the TST - you can use any char.
+
 Now some queries. Suppose a user wants to log in:
 ```Lua
-if db.get("/user/" .. name .. "/password/" .. password) then
+if db.get("/users/" .. name .. "/password/" .. password) then
     print("login ok")
 else
     print("login failed")
@@ -135,18 +144,18 @@ end
 ```
 To query all users, we use the search method, which takes a text pattern with one or more wildcards and a callback function as parameters:
 ```Lua
-db.search("/user/*/", function(key) print(key) end)
+db.search("/users/*/", function(key) print(key) end)
 -- shorter:
-db.search("/user/*/", print)
+db.search("/users/*/", print)
 ```
 Which gives us all the results in alphabetical order:  
 ```
-/user/jesse/  
-/user/walter/
+/users/jesse/  
+/users/walter/
 ```
 If only the username and not the whole key is needed, then the search method can be called with a third parameter that selects the segment. The default separator is '/' (so the slash has a special meaning after all - at least for the search method) but you can set the separator to any other char:
 ```Lua
-db.search("/user/*/", print, 2)
+db.search("/users/*/", print, 2)
 -- print the current separator
 print(db.separator())
 -- set a dot as new separator
@@ -163,6 +172,38 @@ walter
 Next query: Count all users in the "admin" group:
 ```Lua
 local count = 0
-db.search("/user/*/group/admin", function() count = count + 1 end)
+db.search("/users/*/group/admin", function() count = count + 1 end)
 print(count)
 ```
+Search all users who like to cook and are in the admin group:
+```Lua
+db.search("/users/*/hobbies/cooking", function(name) 
+    if db.get("/users/" .. name .. "/group/admin") then print(name) end 
+end, 2)
+```
+If the number of users that like to cook is much larger than the number of admins, then the other way around is better:
+```Lua
+db.search("/users/*/group/admin", function(name) 
+    if db.get("/users/" .. name .. "/hobbies/cooking") then print(name) end 
+end, 2)
+```
+Search all friends of Walter who have at least one hobby in common with him:
+```Lua
+db.search("/users/walter/friends/*", function(friend) 
+	db.search("/users/" .. friend .. "/hobbies/*", function(hobby) 
+		if db.get("/users/walter/hobbies/" .. hobby) then print(friend .. " -> " .. hobby) end 
+	end, 4) 
+end, 4)
+```
+### Pitfalls
+Be careful when searching with multiple wildcards:
+```Lua
+db.put("bananas")
+db.search("*an*s", print)
+```
+Then we get the same key twice:
+```
+bananas
+bananas
+```
+This is not an error, since every possible combination is traversed by the tree: b**an**ana**s** and ban**an**a**s**.
