@@ -110,7 +110,7 @@ node	char	low	equal	high	flag
 13	's'	0	0	0	1
 ```
 ### Use as database
-Ternary Search Trees are underestimated mainly because they are usually only used as a sorted set. However, they can be used very efficiently as a (simple) database. Let's make a little example (we wan't to store users and groups):
+Ternary Search Trees are underestimated mainly because they are usually only used as a sorted set. However, they can be used very efficiently as a (simple) database. Let's make a little example:
 ```Lua
 local TSTDB = require("tstdb")
 
@@ -130,7 +130,8 @@ db.put("/user/jesse/hobbies/sleeping")
 db.put("/user/jesse/hobbies/party")
 ```
 The character '/' as path separator has (for now) no special meaning for the TST - you can use any char.
-Now some queries. Suppose a user wants to log in:
+
+Let's make some queries. Suppose a user wants to log in:
 ```Lua
 if db.get("/user/" .. name .. "/password/" .. password) then
     print("login ok")
@@ -173,7 +174,23 @@ print(count)
 ```
 Search all users who like to cook and are in the admin group:
 ```Lua
-db.search("/user/*/hobbies/cooking", function(name) if db.get("/user/" .. name .. "/group/admin") then print(name) end end, 2)
--- if the number of users that like to cook is much bigger then the number of admins, then this is faster:
-db.search("/user/*/group/admin", function(name) if db.get("/user/" .. name .. "/hobbies/cooking") then print(name) end end, 2)
+db.search("/user/*/hobbies/cooking", function(name) 
+    if db.get("/user/" .. name .. "/group/admin") then print(name) end 
+end, 2)
 ```
+If the number of users that like to cook is much larger than the number of admins, then the other way around is better:
+```Lua
+db.search("/user/*/group/admin", function(name) 
+    if db.get("/user/" .. name .. "/hobbies/cooking") then print(name) end 
+end, 2)
+```
+Search all friends of Walter who have at least one hobby in common with him:
+```Lua
+db.search("/user/walter/friends/*", function(friend) 
+	db.search("/user/" .. friend .. "/hobbies/*", function(hobby) 
+		if db.get("/user/walter/hobbies/" .. hobby) then print(friend .. " -> " .. hobby) end 
+	end, 4) 
+end, 4)
+```
+
+Have fun.
