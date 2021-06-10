@@ -436,7 +436,15 @@ local function TSTDB(filename)
 		return string.char(separator_byte)
 	end
 		
-		
+
+	function self.close()
+		if file then 
+			file:close()
+			file = nil
+		end
+	end
+	
+	
 	return init()
 	
 end
