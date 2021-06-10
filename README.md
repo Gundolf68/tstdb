@@ -194,7 +194,9 @@ Search all friends of Walter who have at least one hobby in common with him:
 ```Lua
 db.search("/users/walter/friends/*", function(friend) 
 	db.search("/users/" .. friend .. "/hobbies/*", function(hobby) 
-		if db.get("/users/walter/hobbies/" .. hobby) then print(friend .. " -> " .. hobby) end 
+		if db.get("/users/walter/hobbies/" .. hobby) then 
+			print(friend .. " -> " .. hobby) 
+		end 
 	end, 4) 
 end, 4)
 ```
