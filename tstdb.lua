@@ -37,8 +37,8 @@ local function TSTDB(filename)
 
 
 	local function get_segment(buffer, buf_len, callback, segment)
-		local count, start = 1, 1
-		for i = 1, buf_len - 1 do
+		local count, start = 0, 0
+		for i = 0, buf_len - 1 do
 			if buffer[i] == separator_byte then
 				if count == segment then 
 					callback(ffi.string(buffer + start, i - start)) 
@@ -187,9 +187,7 @@ local function TSTDB(filename)
 			if key_index < #key then
 				traverse_wc(nodes[node.equal], key, key_index + 1, buffer, buf_index + 1, callback, segment)
 			elseif node.flag == 1 then
-				if callback == self.remove then
-					node.flag = 0				
-				elseif segment then
+				if segment then
 					get_segment(buffer, buf_index + 1, callback, segment)
 				else	
 					callback(ffi.string(buffer, buf_index + 1))
@@ -202,7 +200,7 @@ local function TSTDB(filename)
 		if diff > 0 or wildcard then
 			traverse_wc(nodes[node.high], key, key_index, buffer, buf_index, callback, segment)
 		end		
-	end
+	end		
 					
 	-- public methods
 
@@ -230,7 +228,7 @@ local function TSTDB(filename)
 		return false
 	end
 
-	
+
 	function self.put(key, clear)
 		local key_index, key_len, key_char = 1, #key, byte(key, 1)
 		local node, root_node, prev_node, diff = nodes[1], nodes[0]		
@@ -336,7 +334,7 @@ local function TSTDB(filename)
 		if file then
 			file:close()
 			assert(os.remove(filename))
-			file = assert(load(filename, self))
+			file = assert(load_db(filename, self))
 		end
 	end	
 	
@@ -374,7 +372,7 @@ local function TSTDB(filename)
 			file = nil
 			assert(os.rename(filename, filename .. ".tmp"))
 			self.clear()			
-			file = assert(load(filename, self))
+			file = assert(load_db(filename, self))
 		else
 			self.clear()
 		end
@@ -411,7 +409,7 @@ local function TSTDB(filename)
 	
 
 	function self.state()
-		if node_count == 0 then return 1 end
+		if node_count == 1 then return 1 end
 		local low, low_offset = 0, 0
 		local high, high_offset = 0, 0
 		for i = 1, node_count - 1 do
