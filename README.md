@@ -10,7 +10,7 @@ On a 64-bit system, each node has a size of 32 bytes. As we will see, this size 
 ```C
 typedef struct { char splitchar; char flag; uint32_t high; uint32_t low; uint32_t equal; } Node;
 ```
-This reduces the node size to 16 bytes and we can allocate memory for the array of nodes in advance. With a uint32_t as index, 2^32 nodes can be addressed, which is a lot of memory (64GB), since search trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780953 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, if you add the plural "Telekommunikationsüberwachungsverordnung**en**" the word consumes only 2 new nodes).
+This reduces the node size to 16 bytes and we can allocate memory for the array of nodes in advance. With a uint32_t as index, 2^32 nodes can be addressed, which is a lot of memory (64GB), since Ternary Search Trees are very space efficient. A German dictionary with 356008 words and an average word length of 12 bytes requires 780953 nodes = 2.2 nodes per word (and German words can be very long: "Telekommunikationsüberwachungsverordnung". Because of the shared prefixes, if you add the plural "Telekommunikationsüberwachungsverordnung**en**" the word consumes only 2 new nodes).
 
 ### Basic usage
 ```Lua
