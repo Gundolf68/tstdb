@@ -69,7 +69,7 @@ if not db then
     print(err)
     return
 end
--- do your work ...
+-- your code here
 db.close()
 ```
 When using a persistent tree, it is important to check the return value of the constructor, since various errors can occur when working with files (no write permissions, corrupt database files, etc.). If the file exists, the content is loaded, otherwise it is created. All changes (put, remove, optimize) are written to the file immediately. The database is fail-safe: even in the event of a power failure or program crash during a write operation, the database is automatically repaired at the next startup. The database format is human readable so that it can be edited with an text editor:
