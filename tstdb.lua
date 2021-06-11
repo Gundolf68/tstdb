@@ -303,7 +303,7 @@ local function TSTDB(filename)
 	
 	
 	function self.remove(key)
-		self.put(key, true)
+		return self.put(key, true)
 	end
 	
 	
